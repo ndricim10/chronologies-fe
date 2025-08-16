@@ -1,0 +1,21 @@
+.custom-dropdown-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f1f1f1;
+}
+
+.custom-dropdown-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-dropdown-scroll::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.custom-dropdown-scroll::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.custom-dropdown-scroll::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
