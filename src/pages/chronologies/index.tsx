@@ -1,40 +1,63 @@
+import { Chronology, FileType } from '@/@types/chronology';
+import ConfirmationModal from '@/components/custom-components/confirmation-modal';
 import AppLayout from '@/components/layout/AppLayout';
+import { GenericTable } from '@/components/tables/generic-table';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
 import {
+  useDeleteChronologyMutation,
   useGetChronologyFilesQuery,
   useLazyExportExelFileQuery,
   useUploadChronologyMutation,
 } from '@/redux/services/chronologyApi';
-import { downloadFile, toastComponent } from '@/utils/common-functions';
-import { Clock, Download, FileText, Loader2, Upload, User } from 'lucide-react';
+import { convertDate, downloadFile, initialPage, toastComponent } from '@/utils/common-functions';
+import { Clock, FileText, Loader2, Upload } from 'lucide-react';
 import { useRef, useState } from 'react';
+import { columns } from './columns';
 
 export default function Chronologies() {
   const { user, token } = useAuth();
-  const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [vlerePoliuretan, setVlerePoliuretan] = useState('0');
+  const [pagination, setPagination] = useState(initialPage);
 
-  const { data: filesData, isLoading: isLoadingFiles } = useGetChronologyFilesQuery({});
+  const [downloadingFiles, setDownloadingFiles] = useState<Set<string>>(new Set());
+  const [deletingFiles, setDeletingFiles] = useState<Set<number>>(new Set());
 
-  const [downloadChronoly, { isFetching }] = useLazyExportExelFileQuery();
+  const [deleteModal, setDeleteModal] = useState({
+    open: false,
+    fileId: null as number | null,
+    fileName: '',
+  });
 
-  const downloadChronologyById = (fileId: number, mode: string, vlereValue?: string) => {
-    downloadChronoly({ fileId, mode, vlereValue })
-      .unwrap()
-      .then((res) => {
-        downloadFile(res, 'Chronology_');
-      })
-      .catch((error) => {
-        toastComponent(error?.data?.message || 'Something went wrong!', 'error');
+  const { data: filesData, isFetching: isLoadingFiles, isError, refetch } = useGetChronologyFilesQuery(undefined);
+
+  const [downloadChronology, { isFetching }] = useLazyExportExelFileQuery();
+  const [deleteChronology, { isLoading: isDeletingAny }] = useDeleteChronologyMutation();
+
+  const downloadChronologyById = async (fileId: number, type: FileType, vlereValue?: string) => {
+    const loadingKey = `${fileId}-${type}`;
+    setDownloadingFiles((prev) => new Set(prev).add(loadingKey));
+
+    try {
+      const res = await downloadChronology({ fileId, type, vlereValue }).unwrap();
+      const date = new Date();
+      downloadFile(res, `chronologies_${type === 'EX' ? 'EXPORT' : 'IMPORT'}_${convertDate(date, 'yyyy-MM-dd')}`);
+
+      toastComponent(`File ${type === 'EX' ? 'exported' : 'imported'} successfully`);
+    } catch (error: any) {
+      toastComponent(error?.data?.message || 'Something went wrong!', 'error');
+    } finally {
+      setDownloadingFiles((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(loadingKey);
+        return newSet;
       });
+    }
   };
 
   const [uploadFile, { isLoading: isUploading }] = useUploadChronologyMutation();
@@ -49,11 +72,7 @@ export default function Chronologies() {
       ];
 
       if (!allowedTypes.includes(file.type) && !file.name.match(/\.(xls|xlsx|csv)$/i)) {
-        toast({
-          title: 'Invalid file type',
-          description: 'Please select an Excel (.xls, .xlsx) or CSV file',
-          variant: 'destructive',
-        });
+        toastComponent('Please select an Excel (.xls, .xlsx) or CSV file', 'error');
         return;
       }
 
@@ -63,53 +82,78 @@ export default function Chronologies() {
 
   const handleUpload = async () => {
     if (!selectedFile) {
-      toast({
-        title: 'No file selected',
-        description: 'Please select a file to upload',
-        variant: 'destructive',
-      });
+      toastComponent('Please select a file to upload', 'error');
       return;
     }
 
     try {
       await uploadFile(selectedFile).unwrap();
-      toast({
-        title: 'File uploaded successfully',
-        description: `${selectedFile.name} has been processed`,
-      });
+      toastComponent(`${selectedFile.name} has been processed`, 'error');
+
       setSelectedFile(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
     } catch (error: any) {
-      toast({
-        title: 'Upload failed',
-        description: error?.data?.message || 'An error occurred during upload',
-        variant: 'destructive',
-      });
+      toastComponent(error?.data?.message || 'An error occurred during upload', 'error');
     }
   };
 
-  const handleDownload = async (fileId: number, mode: 'IM' | 'EX') => {
+  const handleDownload = async (fileId: number, type: FileType) => {
     if (!token) return;
 
     try {
-      const vlereValue = mode === 'EX' ? vlerePoliuretan : undefined;
-
-      downloadChronologyById(fileId, mode, vlereValue);
-
-      toast({
-        title: 'Download started',
-        description: `Downloading ${mode.toLowerCase()} file...`,
-      });
+      const vlereValue = type === 'EX' ? vlerePoliuretan : undefined;
+      await downloadChronologyById(fileId, type, vlereValue);
     } catch (error) {
-      toast({
-        title: 'Download failed',
-        description: 'An error occurred during download',
-        variant: 'destructive',
+      toastComponent('An error occurred during download', 'error');
+    }
+  };
+
+  const handleDeleteClick = (file: Chronology) => {
+    setDeleteModal({
+      open: true,
+      fileId: file.id,
+      fileName: file.originalName,
+    });
+  };
+
+  const handleDeleteConfirm = async (fileId: number) => {
+    if (!fileId) return;
+
+    setDeletingFiles((prev) => new Set(prev).add(fileId));
+
+    try {
+      await deleteChronology(fileId).unwrap();
+
+      toastComponent('The chronology file has been removed', 'error');
+      setDeleteModal({ open: false, fileId: null, fileName: '' });
+    } catch (error: any) {
+      toastComponent(error?.data?.message || 'An error occurred during deletion', 'error');
+    } finally {
+      setDeletingFiles((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(fileId);
+        return newSet;
       });
     }
   };
+
+  const files = filesData?.data || [];
+  const needsFrontendPagination = files.length > 10;
+  const totalPages = Math.ceil(files.length / pagination.size);
+
+  const paginatedData = needsFrontendPagination
+    ? files.slice(pagination.page * pagination.size, (pagination.page + 1) * pagination.size)
+    : files;
+
+  const emptyStateContent = (
+    <div className="py-8 text-center">
+      <FileText className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+      <p className="text-muted-foreground">No files uploaded yet</p>
+      <p className="text-sm text-muted-foreground">Upload your first chronology file to get started</p>
+    </div>
+  );
 
   return (
     <AppLayout>
@@ -213,75 +257,39 @@ export default function Chronologies() {
             <CardDescription>View and download processed chronology files</CardDescription>
           </CardHeader>
           <CardContent>
-            {isLoadingFiles ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                <span className="ml-2 text-muted-foreground">Loading files...</span>
-              </div>
-            ) : filesData?.data && filesData.data.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>File Name</TableHead>
-                    <TableHead>Uploaded By</TableHead>
-                    <TableHead>Upload Date</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filesData.data.map((file) => (
-                    <TableRow key={file.id}>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                          {file.originalName}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-muted-foreground" />
-                          {file.uploadedBy.name} {file.uploadedBy.surname}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(file.createdAt).toLocaleDateString()} {new Date(file.createdAt).toLocaleTimeString()}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            isLoading={isFetching}
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDownload(file.id, 'IM')}
-                          >
-                            <Download className="mr-1 h-3 w-3" />
-                            Import
-                          </Button>
-                          <Button
-                            isLoading={isFetching}
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDownload(file.id, 'EX')}
-                          >
-                            <Download className="mr-1 h-3 w-3" />
-                            Export
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <div className="py-8 text-center">
-                <FileText className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-                <p className="text-muted-foreground">No files uploaded yet</p>
-                <p className="text-sm text-muted-foreground">Upload your first chronology file to get started</p>
-              </div>
-            )}
+            <GenericTable<Chronology>
+              data={paginatedData}
+              columns={columns({
+                downloadingFiles,
+                deletingFiles,
+                handleDownload,
+                handleDelete: handleDeleteClick,
+              })}
+              pagination={needsFrontendPagination ? pagination : undefined}
+              setPagination={needsFrontendPagination ? setPagination : undefined}
+              totalPages={needsFrontendPagination ? totalPages : undefined}
+              isFetching={isLoadingFiles}
+              isError={isError}
+              onRetry={refetch}
+              noRowsChildren={emptyStateContent}
+              showItemsPerPage={needsFrontendPagination}
+              showJumpToEnds={needsFrontendPagination}
+            />
           </CardContent>
         </Card>
       </div>
+
+      <ConfirmationModal
+        id={deleteModal.fileId!}
+        title="Delete Chronology File"
+        description={`Are you sure you want to delete "${deleteModal.fileName}"? This action cannot be undone.`}
+        cancel="Cancel"
+        submit="Delete"
+        handleSubmit={handleDeleteConfirm}
+        openModal={deleteModal.open}
+        setOpenModal={(open) => setDeleteModal((prev) => ({ ...prev, open }))}
+        isLoading={deletingFiles.has(deleteModal.fileId!)}
+      />
     </AppLayout>
   );
 }

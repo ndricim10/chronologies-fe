@@ -20,8 +20,8 @@ export interface CommonApiResponse {
 }
 
 export interface PaginationProps {
-  size?: number;
-  page?: number;
+  size: number;
+  page: number;
 }
 
 export type SetPagination = React.Dispatch<React.SetStateAction<PaginationProps>>;
@@ -66,6 +66,11 @@ export interface OptionsType {
   secondLabel?: ReactNode;
   id?: string;
   disabled?: boolean;
+}
+
+export interface CommonColumns<T> {
+  handleEdit?: (value: T) => void;
+  handleDelete?: (value: T) => void;
 }
 
 export interface FilterParams extends PaginationProps {

@@ -1,5 +1,5 @@
 import { Chronology, DownloadFile } from '@/@types/chronology';
-import { PaginationProps, PaginationReturn } from '@/@types/common';
+import { PaginationReturn } from '@/@types/common';
 import { UserResponse } from '@/@types/users';
 import { filteredNullData, getBaseApiUrl, getPrepareHeaders } from '@/utils/common-functions';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
@@ -14,10 +14,9 @@ export const chronologyApi = createApi({
   }),
   tagTypes: ['ChronologyFiles'],
   endpoints: (builder) => ({
-    getChronologyFiles: builder.query<PaginationReturn<Chronology>, PaginationProps>({
-      query: (params) => ({
+    getChronologyFiles: builder.query<PaginationReturn<Chronology>, void>({
+      query: () => ({
         url: 'chronologies',
-        params: filteredNullData(params),
       }),
       providesTags: ['ChronologyFiles'],
     }),
@@ -47,7 +46,19 @@ export const chronologyApi = createApi({
         responseHandler: async (response) => await response.blob(),
       }),
     }),
+    deleteChronology: builder.mutation<number, number>({
+      query: (id) => ({
+        url: `/chronologies/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['ChronologyFiles'],
+    }),
   }),
 });
 
-export const { useGetChronologyFilesQuery, useUploadChronologyMutation, useLazyExportExelFileQuery } = chronologyApi;
+export const {
+  useGetChronologyFilesQuery,
+  useUploadChronologyMutation,
+  useLazyExportExelFileQuery,
+  useDeleteChronologyMutation,
+} = chronologyApi;

@@ -10,8 +10,10 @@ export interface Chronology {
   uploadedBy: UserResponse;
 }
 
+export type FileType = 'IM' | 'EX';
+
 export interface DownloadFile {
   fileId: number;
-  mode: string;
+  type: FileType;
   vlereValue?: string;
 }

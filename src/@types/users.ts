@@ -27,7 +27,6 @@ export interface UserBase {
   email: string;
   role: ROLES;
   password: string;
-  employees?: number;
 }
 
 export interface LoginResponse {
@@ -45,6 +44,7 @@ export interface UserResponse extends UserBase {
 
 export interface CreateUser extends UserBase {
   password: string;
+  username: string;
 }
 
 export interface UserData {
