@@ -8,7 +8,7 @@ import {
   PaginationItem,
   PaginationLink,
 } from '@/components/ui/pagination';
-import { useMatchMedia } from '@/hooks/use-match-media';
+import { useMatchMedia } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import type React from 'react';
