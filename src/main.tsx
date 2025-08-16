@@ -9,7 +9,7 @@ import { Toaster } from 'sonner';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter /* basename="your-base-url-here" */>
+    <BrowserRouter>
       <Provider store={store}>
         <App />
         <Toaster />

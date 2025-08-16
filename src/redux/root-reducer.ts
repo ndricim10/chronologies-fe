@@ -1,8 +1,12 @@
 import { combineReducers } from '@reduxjs/toolkit';
-import { authApi } from './services/authApi';
+import { apiRegistry } from './api-register';
 
-const rootReducer = combineReducers({
-  [authApi.reducerPath]: authApi.reducer,
-});
+const reducers: Record<string, any> = {};
+
+for (const api of apiRegistry) {
+  reducers[api.reducerPath] = api.reducer;
+}
+
+const rootReducer = combineReducers(reducers);
 
 export default rootReducer;

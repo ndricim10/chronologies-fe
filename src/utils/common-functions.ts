@@ -159,3 +159,16 @@ export const formatNumber = (value: number | string, toFixed = 1, currency = '')
     return `${formattedIntegralPart} ${currency ?? ''}`;
   }
 };
+
+export const filteredNullData = (data: any, filterEmptyStrings = true) => {
+  const obj = Object.keys(data).reduce((acc: any, key) => {
+    const value = data[key];
+    if (value !== null && value !== undefined && (!filterEmptyStrings || value !== '')) {
+      acc[key] = value;
+    }
+
+    return acc;
+  }, {});
+
+  return obj;
+};
