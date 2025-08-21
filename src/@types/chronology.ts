@@ -15,5 +15,4 @@ export type FileType = 'IM' | 'EX';
 export interface DownloadFile {
   fileId: number;
   type: FileType;
-  vlereValue?: string;
 }

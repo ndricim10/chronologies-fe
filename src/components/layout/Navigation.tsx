@@ -45,7 +45,7 @@ export default function Navigation() {
           <div className="gradient-primary flex h-8 w-8 items-center justify-center rounded-lg">
             <FileText className="h-4 w-4 text-white" />
           </div>
-          <span className="text-lg font-bold">ChronoFlow</span>
+          <span className="text-lg font-bold">AlbaShoes</span>
         </Link>
 
         <div className="flex flex-1 items-center space-x-1">

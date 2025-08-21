@@ -54,7 +54,7 @@ export default function Login() {
           <div className="gradient-primary shadow-elegant mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl">
             <FileText className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">ChronoFlow</h1>
+          <h1 className="text-2xl font-bold text-foreground">AlbaShoes</h1>
           <p className="mt-2 text-muted-foreground">Professional chronology management</p>
         </div>
 

@@ -5,7 +5,6 @@ import { GenericTable } from '@/components/tables/generic-table';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useAuth } from '@/hooks/use-auth';
 import {
   useDeleteChronologyMutation,
   useGetChronologyFilesQuery,
@@ -18,11 +17,13 @@ import { useRef, useState } from 'react';
 import { columns } from './columns';
 
 export default function Chronologies() {
-  const { user, token } = useAuth();
+  const [downloadChronology] = useLazyExportExelFileQuery();
+  const [deleteChronology, { isLoading: isDeleting }] = useDeleteChronologyMutation();
+  const [uploadFile, { isLoading: isUploading }] = useUploadChronologyMutation();
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [vlerePoliuretan, setVlerePoliuretan] = useState('0');
   const [pagination, setPagination] = useState(initialPage);
 
   const [downloadingFiles, setDownloadingFiles] = useState<Set<string>>(new Set());
@@ -36,18 +37,14 @@ export default function Chronologies() {
 
   const { data: filesData, isFetching: isLoadingFiles, isError, refetch } = useGetChronologyFilesQuery(undefined);
 
-  const [downloadChronology, { isFetching }] = useLazyExportExelFileQuery();
-  const [deleteChronology, { isLoading: isDeletingAny }] = useDeleteChronologyMutation();
-
-  const downloadChronologyById = async (fileId: number, type: FileType, vlereValue?: string) => {
+  const downloadChronologyById = async (fileId: number, type: FileType) => {
     const loadingKey = `${fileId}-${type}`;
     setDownloadingFiles((prev) => new Set(prev).add(loadingKey));
 
     try {
-      const res = await downloadChronology({ fileId, type, vlereValue }).unwrap();
+      const res = await downloadChronology({ fileId, type }).unwrap();
       const date = new Date();
       downloadFile(res, `chronologies_${type === 'EX' ? 'EXPORT' : 'IMPORT'}_${convertDate(date, 'yyyy-MM-dd')}`);
-
       toastComponent(`File ${type === 'EX' ? 'exported' : 'imported'} successfully`);
     } catch (error: any) {
       toastComponent(error?.data?.message || 'Something went wrong!', 'error');
@@ -59,8 +56,6 @@ export default function Chronologies() {
       });
     }
   };
-
-  const [uploadFile, { isLoading: isUploading }] = useUploadChronologyMutation();
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -100,11 +95,8 @@ export default function Chronologies() {
   };
 
   const handleDownload = async (fileId: number, type: FileType) => {
-    if (!token) return;
-
     try {
-      const vlereValue = type === 'EX' ? vlerePoliuretan : undefined;
-      await downloadChronologyById(fileId, type, vlereValue);
+      await downloadChronologyById(fileId, type);
     } catch (error) {
       toastComponent('An error occurred during download', 'error');
     }
@@ -209,45 +201,6 @@ export default function Chronologies() {
           </CardContent>
         </Card>
 
-        {user?.role === 'ADMIN' && (
-          <Card className="shadow-soft">
-            <CardHeader>
-              <CardTitle>Export Configuration</CardTitle>
-              <CardDescription>Configure the Vlere Poliuretan value for export operations</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4">
-                <label htmlFor="vlere" className="min-w-0 text-sm font-medium">
-                  Vlere Poliuretan:
-                </label>
-                <Input
-                  id="vlere"
-                  type="number"
-                  value={vlerePoliuretan}
-                  onChange={(e) => setVlerePoliuretan(e.target.value)}
-                  className="w-32"
-                />
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {user?.role === 'FINANCE' && (
-          <Card className="shadow-soft">
-            <CardHeader>
-              <CardTitle>Export Configuration</CardTitle>
-              <CardDescription>Current Vlere Poliuretan value (admin controlled)</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4">
-                <label className="text-sm font-medium">Vlere Poliuretan:</label>
-                <Input type="number" value={vlerePoliuretan} disabled className="w-32" />
-                <p className="text-xs text-muted-foreground">Only administrators can modify this value</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         <Card className="shadow-soft">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -288,7 +241,7 @@ export default function Chronologies() {
         handleSubmit={handleDeleteConfirm}
         openModal={deleteModal.open}
         setOpenModal={(open) => setDeleteModal((prev) => ({ ...prev, open }))}
-        isLoading={deletingFiles.has(deleteModal.fileId!)}
+        isLoading={deletingFiles.has(deleteModal.fileId!) && isDeleting}
       />
     </AppLayout>
   );
