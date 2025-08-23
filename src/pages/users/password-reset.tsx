@@ -48,7 +48,7 @@ export const PasswordResetModal = ({ openModal, setOpenModal, user, setResetting
     <GenericModal<any, string>
       openModal={openModal}
       setOpenModal={setOpenModal}
-      icon={<KeyRound className="h-6 w-6 text-primary" />}
+      icon={<KeyRound className="h-6 w-6" />}
       title="Reset Password"
       description={user ? `Set a new password for ${user.name} ${user.surname}` : 'Reset user password'}
       onSubmit={onSubmit}

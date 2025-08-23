@@ -17,6 +17,7 @@ import { useRef, useState } from 'react';
 import { columns } from './columns';
 
 export default function Chronologies() {
+  const initModal = { open: false, fileId: undefined, fileName: '' };
   const [downloadChronology] = useLazyExportExelFileQuery();
   const [deleteChronology, { isLoading: isDeleting }] = useDeleteChronologyMutation();
   const [uploadFile, { isLoading: isUploading }] = useUploadChronologyMutation();
@@ -29,32 +30,35 @@ export default function Chronologies() {
   const [downloadingFiles, setDownloadingFiles] = useState<Set<string>>(new Set());
   const [deletingFiles, setDeletingFiles] = useState<Set<number>>(new Set());
 
-  const [deleteModal, setDeleteModal] = useState({
-    open: false,
-    fileId: null as number | null,
-    fileName: '',
-  });
+  const [deleteModal, setDeleteModal] = useState<{
+    open: boolean;
+    fileId?: number;
+    fileName: string;
+  }>(initModal);
 
   const { data: filesData, isFetching: isLoadingFiles, isError, refetch } = useGetChronologyFilesQuery(undefined);
 
-  const downloadChronologyById = async (fileId: number, type: FileType) => {
+  const handleDownload = (fileId: number, type: FileType) => {
     const loadingKey = `${fileId}-${type}`;
     setDownloadingFiles((prev) => new Set(prev).add(loadingKey));
 
-    try {
-      const res = await downloadChronology({ fileId, type }).unwrap();
-      const date = new Date();
-      downloadFile(res, `chronologies_${type === 'EX' ? 'EXPORT' : 'IMPORT'}_${convertDate(date, 'yyyy-MM-dd')}`);
-      toastComponent(`File ${type === 'EX' ? 'exported' : 'imported'} successfully`);
-    } catch (error: any) {
-      toastComponent(error?.data?.message || 'Something went wrong!', 'error');
-    } finally {
-      setDownloadingFiles((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(loadingKey);
-        return newSet;
+    downloadChronology({ fileId, type })
+      .unwrap()
+      .then((res) => {
+        const date = new Date();
+        downloadFile(res, `chronologies_${type === 'EX' ? 'EXPORT' : 'IMPORT'}_${convertDate(date, 'yyyy-MM-dd')}`);
+        toastComponent(`File ${type === 'EX' ? 'exported' : 'imported'} successfully`);
+      })
+      .catch((error) => {
+        toastComponent(error?.data?.message || 'Something went wrong!', 'error');
+      })
+      .finally(() => {
+        setDownloadingFiles((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(loadingKey);
+          return newSet;
+        });
       });
-    }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,25 +85,19 @@ export default function Chronologies() {
       return;
     }
 
-    try {
-      await uploadFile(selectedFile).unwrap();
-      toastComponent(`${selectedFile.name} has been processed`, 'error');
+    uploadFile(selectedFile)
+      .unwrap()
+      .then(() => {
+        toastComponent(`${selectedFile.name} has been processed`, 'error');
 
-      setSelectedFile(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    } catch (error: any) {
-      toastComponent(error?.data?.message || 'An error occurred during upload', 'error');
-    }
-  };
-
-  const handleDownload = async (fileId: number, type: FileType) => {
-    try {
-      await downloadChronologyById(fileId, type);
-    } catch (error) {
-      toastComponent('An error occurred during download', 'error');
-    }
+        setSelectedFile(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      })
+      .catch((error) => {
+        toastComponent(error?.data?.message || 'An error occurred during upload', 'error');
+      });
   };
 
   const handleDeleteClick = (file: Chronology) => {
@@ -116,10 +114,12 @@ export default function Chronologies() {
     setDeletingFiles((prev) => new Set(prev).add(fileId));
 
     try {
-      await deleteChronology(fileId).unwrap();
-
-      toastComponent('The chronology file has been removed', 'error');
-      setDeleteModal({ open: false, fileId: null, fileName: '' });
+      deleteChronology(fileId)
+        .unwrap()
+        .then(() => {
+          toastComponent('The chronology file has been removed', 'error');
+          setDeleteModal(initModal);
+        });
     } catch (error: any) {
       toastComponent(error?.data?.message || 'An error occurred during deletion', 'error');
     } finally {
@@ -173,7 +173,7 @@ export default function Chronologies() {
                 type="file"
                 accept=".xls,.xlsx,.csv"
                 onChange={handleFileSelect}
-                className="flex-1"
+                className="flex-1 cursor-pointer"
               />
               <Button onClick={handleUpload} disabled={!selectedFile || isUploading}>
                 {isUploading ? (

@@ -33,8 +33,7 @@ export default function Users() {
     isError,
     isFetching,
   } = useGetUsersQuery({
-    page: 0,
-    size: 10,
+    ...pagination,
   });
 
   const [deleteUser, { isLoading }] = useDeleteUserMutation();

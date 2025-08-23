@@ -11,11 +11,7 @@ import Spinner from '../common-cards/Spinner';
 import './styles.css';
 
 const PopoverRender = ({
-  dropdownData = {
-    isLoading: false,
-    lastEntryRef: () => {},
-    options: [],
-  },
+  dropdownData = { isLoading: false, lastEntryRef: () => {}, options: [] },
   onChange,
   value,
   placeholder,
@@ -30,44 +26,33 @@ const PopoverRender = ({
   name = '',
   setFilters,
   commandListClassname,
-  selectValue,
   selectedLabel,
-  type = 'inputText',
   className,
   ...field
 }: FieldProps) => {
   const { isLoading = false, options = [], onSelectChange, lastEntryRef } = dropdownData;
+
   const [open, setOpen] = useState(false);
   const [searchMode, setSearchMode] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [filteredOptions, setFilteredOptions] = useState(options);
+  const [select, setSelect] = useState<string>();
+
   const triggerRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const commandListRef = useRef<HTMLDivElement>(null);
-  const [select, setSelect] = useState<string>();
 
   useEffect(() => {
-    if (selectedLabel) {
-      setSelect(selectedLabel);
-    } else {
-      setSelect(undefined);
-    }
+    setSelect(selectedLabel ?? undefined);
   }, [selectedLabel]);
 
   useEffect(() => {
     setFilteredOptions(options);
-  }, [options.length]);
+  }, [options]);
 
   useEffect(() => {
     if (searchMode && open && isSearchable) {
-      const focusAttempts = [0, 10, 50, 100];
-      focusAttempts.forEach((delay) => {
-        setTimeout(() => {
-          if (inputRef.current) {
-            inputRef.current.focus();
-          }
-        }, delay);
-      });
+      [0, 10, 50, 100].forEach((delay) => setTimeout(() => inputRef.current?.focus(), delay));
       setSearchText('');
       setSearchValue?.('');
     }
@@ -75,46 +60,41 @@ const PopoverRender = ({
 
   const displayLabel = options.find((item) => item.value.value === value)?.label || select;
 
-  const onValueChange = (value: string) => {
-    onChange?.(value);
-    onSelectChange?.(value);
+  const onValueChange = (val: string) => {
+    onChange?.(val);
+    onSelectChange?.(val);
     setOpen(false);
     setSearchText('');
     setSearchValue?.('');
     setSearchMode(false);
-    setFilters?.((prev: any) => ({ ...prev, [name]: value }));
-
-    if (!setSearchValue) {
-      setFilteredOptions(options);
-    }
+    setFilters?.((prev: any) => ({ ...prev, [name]: val }));
+    if (!setSearchValue) setFilteredOptions(options);
   };
 
   const onRemoveValue = (e: React.MouseEvent) => {
     e.stopPropagation();
     setOpen(false);
     removeValue?.();
-    setFilters?.((prev: any) => ({ ...prev, [name]: '' }));
     setSelect(undefined);
     setSearchText('');
     setSearchMode(false);
-
-    if (!setSearchValue) {
-      setFilteredOptions(options);
-    }
+    setFilters?.((prev: any) => ({ ...prev, [name]: '' }));
+    if (!setSearchValue) setFilteredOptions(options);
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchText(value);
+    const val = e.target.value;
+    setSearchText(val);
     if (setSearchValue) {
-      debouncedSetName(value, setSearchValue);
+      debouncedSetName(val, setSearchValue);
     } else {
       const filtered = options.filter((item) => {
         const labelText = typeof item.label === 'string' ? item.label : '';
         const secondLabelText = typeof item.secondLabel === 'string' ? item.secondLabel : '';
-        const searchLower = value.toLowerCase();
-
-        return labelText.toLowerCase().includes(searchLower) || secondLabelText.toLowerCase().includes(searchLower);
+        return (
+          labelText.toLowerCase().includes(val.toLowerCase()) ||
+          secondLabelText.toLowerCase().includes(val.toLowerCase())
+        );
       });
       setFilteredOptions(filtered);
     }
@@ -131,23 +111,19 @@ const PopoverRender = ({
         setSearchText((prev) => prev + ' ');
       }
     }
-    if (e.key === 'Escape') {
-      setSearchMode(false);
-      setOpen(false);
-    } else if (e.key === 'Enter' && filteredOptions.length === 1) {
+    if (e.key === 'Escape') setOpen(false);
+    else if (e.key === 'Enter' && filteredOptions.length === 1) {
       onValueChange(filteredOptions[0].value.value as string);
     } else if (e.key === 'ArrowDown' && commandListRef.current) {
       e.preventDefault();
       const firstItem = commandListRef.current.querySelector('[role="option"]') as HTMLElement;
-      if (firstItem) firstItem.focus();
+      firstItem?.focus();
     }
   };
 
   const handleBlur = () => {
     setTimeout(() => {
-      if (!document.activeElement?.closest('[data-radix-popper-content-wrapper]')) {
-        setOpen(false);
-      }
+      if (!document.activeElement?.closest('[data-radix-popper-content-wrapper]')) setOpen(false);
     }, 100);
   };
 
@@ -171,19 +147,17 @@ const PopoverRender = ({
         if (!isOpen) {
           setSearchMode(false);
           setSearchText('');
-          if (!setSearchValue) {
-            setFilteredOptions(options);
-          }
-        } else {
-          if (!setSearchValue) {
-            setFilteredOptions(options);
-          }
-        }
+          if (!setSearchValue) setFilteredOptions(options);
+        } else if (!setSearchValue) setFilteredOptions(options);
       }}
     >
       <PopoverTrigger
         asChild
-        className={cn(`h-9 dark:text-card ${isCursorPointer(disabled)}`, !value && 'text-muted-foreground', className)}
+        className={cn(
+          `h-9 dark:text-slate-100 ${isCursorPointer(disabled)}`,
+          !value && 'text-muted-foreground',
+          className
+        )}
         disabled={disabled}
       >
         <Button
@@ -192,50 +166,47 @@ const PopoverRender = ({
           role="combobox"
           onClick={handleButtonClick}
           className={cn(
-            `relative flex h-9 w-full justify-between bg-white hover:bg-white focus:bg-white dark:bg-white dark:text-card ${isCursorPointer(disabled)}`,
-            (!value || value === '') && 'font-normal text-gray-500 hover:text-gray-500',
-            searchMode && 'p-0 pl-2 pr-8'
+            `relative flex h-9 w-full justify-between bg-white hover:bg-gray-50 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700`,
+            (!value || value === '') && 'font-normal text-gray-500 dark:text-slate-400',
+            searchMode && 'p-0 pl-2 pr-8',
+            isCursorPointer(disabled)
           )}
           disabled={disabled}
           type="button"
         >
           {searchMode && isSearchable ? (
-            <div className="h-full flex-1">
-              <input
-                ref={inputRef}
-                type="text"
-                value={searchText}
-                onChange={handleSearchChange}
-                onKeyDown={handleKeyDown}
-                placeholder={placeholderSearch ?? 'Search...'}
-                className="no-borders h-full w-full border-none bg-transparent p-0 pl-2 outline-none md:pl-8"
-                onClick={(e) => e.stopPropagation()}
-                onBlur={handleBlur}
-              />
-            </div>
+            <input
+              ref={inputRef}
+              type="text"
+              value={searchText}
+              onChange={handleSearchChange}
+              onKeyDown={handleKeyDown}
+              placeholder={placeholderSearch ?? 'Search...'}
+              className="h-full w-full flex-1 bg-transparent p-0 pl-2 text-sm outline-none dark:text-slate-100 dark:placeholder:text-slate-400"
+              onClick={(e) => e.stopPropagation()}
+              onBlur={handleBlur}
+            />
           ) : (
             <span className={cn(!value && 'text-muted-foreground')}>{displayLabel || placeholder}</span>
           )}
 
           {displayIcon && Boolean(value) ? (
             <Button onClick={onRemoveValue} className="!bg-transparent p-0">
-              <X size={18} className="text-black" />
+              <X size={18} className="text-slate-900 dark:text-slate-50" />
             </Button>
           ) : (
-            <ChevronDown className={cn('absolute right-2 h-4 w-4 shrink-0 !opacity-100')} />
+            <ChevronDown className="absolute right-2 h-4 w-4 shrink-0 text-gray-500 dark:text-slate-400" />
           )}
         </Button>
       </PopoverTrigger>
+
       <PopoverContent
-        className="w-full min-w-80 border p-0"
-        style={{ width: triggerRef.current ? `${triggerRef.current.offsetWidth}px` : 'auto' }}
+        className="w-full min-w-80 border p-0 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-50"
+        style={{ width: triggerRef.current?.offsetWidth ?? 'auto' }}
         onWheel={(e) => {
           const target = e.target as HTMLElement;
           const scrollableParent = target.closest('[data-scroll-area]') || commandListRef.current;
-
-          if (scrollableParent && scrollableParent.contains(target)) {
-            return;
-          }
+          if (scrollableParent?.contains(target)) return;
         }}
       >
         <Command className="flex flex-col" shouldFilter={false}>

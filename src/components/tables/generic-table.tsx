@@ -59,12 +59,12 @@ export function GenericTable<T>({
         </div>
       )}
 
-      <Card className="border-0 shadow-sm">
+      <Card className="border-0 shadow-xl">
         <CardContent className="p-0">
-          <div className="overflow-hidden rounded-lg border border-gray-200">
+          <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-600/30">
             <Table className={cn('w-full', tableClassName)}>
               <CustomTableHeader table={table} />
-              <TableBody className="bg-white">
+              <TableBody className="bg-white dark:bg-gray-800/30">
                 {isFetching ? (
                   <TableSkeleton columns={columns.length} />
                 ) : isError ? (
@@ -75,12 +75,14 @@ export function GenericTable<T>({
                       key={row.id}
                       data-state={row.getIsSelected() && 'selected'}
                       className={cn(
-                        'border-b border-gray-100 transition-colors hover:bg-gray-50/50',
-                        index % 2 === 0 ? 'bg-white' : 'bg-gray-50/20'
+                        'border-b transition-colors',
+                        'border-gray-200 hover:bg-gray-50/50',
+                        'dark:border-gray-600/30 dark:hover:bg-gray-700/30',
+                        index % 2 === 0 ? 'bg-white dark:bg-gray-800/20' : 'bg-gray-50/20 dark:bg-gray-700/20'
                       )}
                     >
                       {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id} className="px-6 py-4 font-medium text-gray-900">
+                        <TableCell key={cell.id} className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </TableCell>
                       ))}
@@ -91,8 +93,11 @@ export function GenericTable<T>({
                 )}
 
                 {footer && (
-                  <TableRow className="border-t-2 border-gray-200 bg-gray-50">
-                    <TableCell colSpan={columns.length} className="px-6 py-4 font-medium">
+                  <TableRow className="border-t-2 border-gray-200 bg-gray-50 dark:border-gray-600/50 dark:bg-gray-700/40">
+                    <TableCell
+                      colSpan={columns.length}
+                      className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100"
+                    >
                       {footer}
                     </TableCell>
                   </TableRow>
@@ -108,7 +113,7 @@ export function GenericTable<T>({
           <PaginationComponent
             {...{ pagination, setPagination }}
             {...field}
-            className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
+            className="rounded-lg border border-gray-200 bg-white/80 p-4 text-gray-900 shadow-sm backdrop-blur-sm dark:border-gray-600/30 dark:bg-gray-800/50 dark:text-white"
           />
         </div>
       )}

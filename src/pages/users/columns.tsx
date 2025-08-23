@@ -30,26 +30,19 @@ export const columns = ({
     {
       accessorKey: 'username',
       header: 'Username',
-      cell: ({ getValue }) => <div className="text-gray-600">{getValue() as string}</div>,
     },
     {
       accessorKey: 'email',
       header: 'Email',
-      cell: ({ getValue }) => <div className="text-gray-600">{getValue() as string}</div>,
     },
     {
       accessorKey: 'role',
       header: 'Role',
-      cell: ({ getValue }) => {
-        const role = getValue() as string;
+      cell: ({ row: { original } }) => {
         return (
-          <span
-            className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${
-              role === 'ADMIN' ? 'bg-primary/10 text-primary' : 'bg-secondary text-secondary-foreground'
-            }`}
-          >
+          <span className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium">
             <Badge className="h-3 w-3" />
-            {role}
+            {original?.role}
           </span>
         );
       },
