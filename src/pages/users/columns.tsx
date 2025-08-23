@@ -1,6 +1,7 @@
 import { CommonColumns } from '@/@types/common';
 import { UserResponse } from '@/@types/users';
 import CommonActions from '@/components/custom-components/common-actions';
+import TooltipComponent from '@/components/custom-components/tooltip-components';
 import { Button } from '@/components/ui/button';
 import { ColumnDef } from '@tanstack/react-table';
 import { Badge, Key, Loader2 } from 'lucide-react';
@@ -66,28 +67,31 @@ export const columns = ({
       },
     },
     {
-      id: 'password-actions',
-      header: 'Password',
+      id: 'delete-actions',
+      header: 'Actions',
       cell: ({ row }) => {
         const isResetting = resettingUsers.has(row.original.id);
 
         return (
-          <Button size="sm" variant="outline" onClick={() => handleResetPassword(row.original)} disabled={isResetting}>
-            {isResetting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Key className="h-3 w-3" />}
-          </Button>
+          <div className="flex items-center gap-2">
+            <TooltipComponent trigerText="Reset password">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleResetPassword(row.original)}
+                disabled={isResetting}
+              >
+                {isResetting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Key className="h-3 w-3" />}
+              </Button>
+            </TooltipComponent>
+            <CommonActions
+              original={row.original}
+              handleDelete={handleDelete}
+              isDeleting={deletingUsers.has(row.original.id)}
+            />
+          </div>
         );
       },
-    },
-    {
-      id: 'delete-actions',
-      header: '',
-      cell: ({ row }) => (
-        <CommonActions
-          original={row.original}
-          handleDelete={handleDelete}
-          isDeleting={deletingUsers.has(row.original.id)}
-        />
-      ),
     },
   ];
 };

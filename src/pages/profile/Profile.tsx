@@ -5,8 +5,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 import { useGetLoggedInUserQuery, useUpdatePasswordMutation, useUpdateProfileMutation } from '@/redux/services/authApi';
-import { toastComponent } from '@/utils/common-functions';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Lock, Save, User } from 'lucide-react';
 import { useEffect } from 'react';
@@ -36,6 +36,7 @@ type PasswordValues = z.infer<typeof passwordSchema>;
 
 export default function Profile() {
   const { user } = useAuth();
+  const { toast } = useToast();
 
   const { data: userData } = useGetLoggedInUserQuery();
   const [updateProfile, { isLoading: isUpdatingProfile }] = useUpdateProfileMutation();
@@ -66,21 +67,35 @@ export default function Profile() {
   const submitProfile = (values: ProfileValues) => {
     updateProfile(values)
       .unwrap()
-      .then(() => toastComponent('Your profile information has been successfully updated'))
-      .catch((error) => {
-        toastComponent(error?.data?.message || 'An error occurred while updating your profile', 'error');
+      .then((res) => {
+        toast({
+          title: 'Profile Updated',
+          description: res?.message,
+        });
+      })
+      .catch(() => {
+        toast({
+          title: 'Update Failed',
+          description: 'There was an error updating your profile. Please try again.',
+        });
       });
   };
 
   const submitPassword = (values: PasswordValues) => {
     updatePassword(values)
       .unwrap()
-      .then(() => {
-        toastComponent('Your password has been successfully changed');
+      .then((res) => {
+        toast({
+          title: 'Password Changed',
+          description: res?.message,
+        });
         passwordForm.reset();
       })
       .catch((error) => {
-        error?.data?.message || 'An error occurred while changing your password';
+        toast({
+          title: 'Password Change Failed',
+          description: error?.data?.message || 'An error occurred while changing your password. Please try again.',
+        });
       });
   };
 
@@ -98,7 +113,6 @@ export default function Profile() {
           <p className="mt-2 text-muted-foreground">Manage your account information and security settings</p>
         </div>
 
-        {/* Personal Info */}
         <Card className="shadow-soft">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

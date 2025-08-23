@@ -1,8 +1,7 @@
-import { DecodedToken, ErrorProps, Position } from '@/@types/common';
+import { DecodedToken } from '@/@types/common';
+import { format } from 'date-fns';
 import { jwtDecode } from 'jwt-decode';
 import { debounce } from 'lodash';
-import { format } from 'date-fns';
-import { toast } from 'sonner';
 
 export const tokenExpiry = () => {
   const token = localStorage.getItem('idToken');
@@ -41,34 +40,6 @@ export const convertDate = (value?: Date | string, formatType = 'yyyy-MM-dd', to
   }
 
   return format(date, formatType);
-};
-
-export const toastComponent = (
-  description: string,
-  type?: 'error' | 'success' | 'info' | 'warning',
-  position?: Position
-) => {
-  const updatedType = type ?? 'success';
-  const background =
-    type === 'success'
-      ? 'bg-primary'
-      : type === 'error'
-        ? 'bg-red-700'
-        : type === 'warning'
-          ? 'bg-yellow-700'
-          : 'bg-white';
-
-  const textColor = type === 'info' ? 'text-primary' : 'text-white';
-
-  return toast[updatedType]('', {
-    description,
-    action: {
-      label: 'X',
-      onClick: () => {},
-    },
-    className: `${background} ${textColor} rounded-md shadow-lg`,
-    position,
-  });
 };
 
 export const getFirstCharacters = (value = '') => {
@@ -126,14 +97,6 @@ export const capitalizeText = (text: string) => {
 
   const modifiedText = text.replace(/_/g, ' ');
   return modifiedText.charAt(0).toUpperCase() + modifiedText.slice(1).toLowerCase();
-};
-
-export const handleErrorMessages = (err: ErrorProps, label: string) => {
-  if (err.status === 462) {
-    toastComponent(err.data.message, 'error');
-  } else {
-    toastComponent(label, 'error');
-  }
 };
 
 export const base64ToBlob = (base64: string, mimeType: string) => {
