@@ -1,5 +1,3 @@
-'use client';
-
 import { Button } from '@/components/ui/button';
 import {
   Pagination,
@@ -8,21 +6,17 @@ import {
   PaginationItem,
   PaginationLink,
 } from '@/components/ui/pagination';
-import { useMatchMedia } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 import PopoverRender from '../form-render/popover-render';
-
-export interface pagination {
-  page: number;
-  size: number;
-}
+import { OptionsType, PaginationProps } from '@/@types/common';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export interface PaginationComponentProps {
-  pagination: pagination;
-  setPagination: React.Dispatch<React.SetStateAction<pagination>>;
+  pagination: PaginationProps;
+  setPagination: React.Dispatch<React.SetStateAction<PaginationProps>>;
   totalPages?: number;
   showItemsPerPage?: boolean;
   showJumpToEnds?: boolean;
@@ -31,7 +25,7 @@ export interface PaginationComponentProps {
 }
 
 export const PaginationComponent = ({
-  pagination,
+  pagination = { page: 0, size: 10 },
   setPagination,
   totalPages = 1,
   showItemsPerPage = true,
@@ -40,7 +34,15 @@ export const PaginationComponent = ({
   variant = 'default',
 }: PaginationComponentProps) => {
   const [visiblePages, setVisiblePages] = useState<(number | 'ellipsis')[]>([]);
-  const isMobile = useMatchMedia();
+  const isMobile = useIsMobile();
+
+  const options: OptionsType[] = ['10', '20', '50', '100'].map((item) => ({
+    value: {
+      label: item,
+      value: item,
+    },
+    label: item,
+  }));
 
   useEffect(() => {
     const calculateVisiblePages = () => {
@@ -54,7 +56,7 @@ export const PaginationComponent = ({
           pages.push(i);
         }
       } else {
-        const currentPage = pagination.page - 1;
+        const currentPage = pagination?.page - 1;
 
         let startPage = Math.max(2, currentPage - Math.floor(maxVisiblePages / 2));
         const endPage = Math.min(totalPages - 1, startPage + maxVisiblePages - 1);
@@ -218,20 +220,14 @@ export const PaginationComponent = ({
 
       {showItemsPerPage && (
         <div className="order-1 flex items-center gap-2 sm:order-3">
-          <span className="whitespace-nowrap text-sm text-muted-foreground">Items per page:</span>
-
           <PopoverRender
             isSearchable={false}
             type="select"
-            options={['10', '20', '50', '100'].map((item) => ({
-              value: {
-                label: item,
-                value: item,
-              },
-              label: item,
-            }))}
+            dropdownData={{
+              options,
+              onSelectChange: handleSizeChange,
+            }}
             value={String(pagination.size)}
-            onSelectChange={handleSizeChange}
             className="!w-20"
             displayIcon={false}
           />

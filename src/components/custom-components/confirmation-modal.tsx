@@ -25,7 +25,9 @@ const ConfirmationModal = ({
     <Dialog open={openModal} onOpenChange={setOpenModal}>
       <DialogContent className='dark:text-white" dark:bg-slate-700'>
         <DialogHeader>
-          <DialogTitle className='dark:text-white" dark:bg-slate-700 dark:text-primary'>{title}</DialogTitle>
+          <DialogTitle className='dark:text-white" text-red-700 dark:bg-slate-700 dark:text-secondary'>
+            {title}
+          </DialogTitle>
           <DialogDescription className='dark:text-white" dark:bg-slate-700 dark:text-white'>
             {description}
           </DialogDescription>
@@ -42,13 +44,13 @@ const ConfirmationModal = ({
             {cancel ?? 'Kthehu'}
           </Button>
           <Button
-          isLoading={isLoading}
+            isLoading={isLoading}
             type="button"
             variant="secondary"
             className="flex items-center gap-2 bg-primary text-white hover:bg-primary dark:bg-primary dark:text-white dark:hover:bg-primary sm:min-w-[100px]"
             onClick={() => handleSubmit(id)}
           >
-           <Check size={18} className="text-white" />
+            <Check size={18} className="text-white" />
             {submit ?? 'Yes'}
           </Button>
         </DialogFooter>

@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import { UseFormReturn } from 'react-hook-form';
 
 export interface DecodedToken {
   exp: number;
@@ -11,6 +12,11 @@ export interface PaginationReturn<T> {
   totalPages: number;
   totalElements: number;
   data: T[];
+}
+
+export interface CommonApiResponse {
+  success: boolean;
+  message: string;
 }
 
 export interface PaginationProps {
@@ -62,6 +68,11 @@ export interface OptionsType {
   disabled?: boolean;
 }
 
+export interface CommonColumns<T> {
+  handleEdit?: (value: T) => void;
+  handleDelete?: (value: T) => void;
+}
+
 export interface FilterParams extends PaginationProps {
   loading: boolean;
   hasMore: boolean;
@@ -73,3 +84,8 @@ export type SetQueryParamsType = React.Dispatch<React.SetStateAction<FilterParam
 export type Position = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top-center' | 'bottom-center';
 
 export interface CommonUrlParams extends Partial<PaginationProps> {}
+
+export interface FromToProps {
+  from?: string;
+  to?: string;
+}

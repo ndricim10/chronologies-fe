@@ -8,7 +8,7 @@ interface TooltipProps {
   len?: number;
 }
 
-const TooltipComponent = ({ trigerText, children, className, len }: TooltipProps) => {
+const TooltipComponent = ({ trigerText, children, className, len = 5 }: TooltipProps) => {
   const [showText, setShowText] = useState(false);
   return (
     <TooltipProvider>

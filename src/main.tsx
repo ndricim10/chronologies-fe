@@ -5,14 +5,19 @@ import { StrictMode } from 'react';
 import { Provider } from 'react-redux';
 import store from './redux/store.ts';
 import { BrowserRouter } from 'react-router-dom';
-import { Toaster } from 'sonner';
+import { Toaster as SonnerToaster } from 'sonner';
+import { Toaster as CustomToaster } from '@/components/custom-toaster.tsx';
+import { ThemeProvider } from './hooks/use-theme.tsx';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter /* basename="your-base-url-here" */>
+    <BrowserRouter>
       <Provider store={store}>
-        <App />
-        <Toaster />
+        <ThemeProvider defaultTheme="light" storageKey="alba-shoes-theme">
+          <SonnerToaster />
+          <CustomToaster />
+          <App />
+        </ThemeProvider>
       </Provider>
     </BrowserRouter>
   </StrictMode>

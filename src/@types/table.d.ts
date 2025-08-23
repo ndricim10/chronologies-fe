@@ -19,6 +19,8 @@ export interface GenericTableProps<T> extends Partial<PaginationComponentProps>,
   className?: string;
   isMobile?: boolean;
   tableClassName?: string;
+  showItemsPerPage?: boolean;
+  showJumpToEnds?: boolean;
 }
 
 export type CollapseType = {
