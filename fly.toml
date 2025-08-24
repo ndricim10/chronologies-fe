@@ -1,0 +1,9 @@
+app = "alba-shoes"
+primary_region = "fra"
+
+[build] 
+# leave this empty if you want Fly to build from Dockerfile
+
+[http_service]
+  internal_port = 80
+  force_https = true
