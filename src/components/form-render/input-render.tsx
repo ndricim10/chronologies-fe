@@ -1,16 +1,7 @@
 import { FieldProps } from '@/@types/form-render';
 import { Input } from '@/components/ui/input';
 
-const InputRender = ({
-  type,
-  value,
-  onChange,
-  placeholder,
-  selectValue,
-  onInputChange,
-  isPlaceholder = true,
-  ...field
-}: FieldProps) => {
+const InputRender = ({ type, value, onChange, selectValue, onInputChange, ...field }: FieldProps) => {
   let inputType = '';
   switch (type) {
     case 'inputPassword':
@@ -33,12 +24,11 @@ const InputRender = ({
       defaultValue={selectValue ?? value}
       value={selectValue ?? value}
       autoComplete="off"
-      placeholder={isPlaceholder ? `Vendosni ${placeholder}` : placeholder}
       {...field}
       type={inputType}
       onChange={(value) => {
-        onChange && onChange(value);
-        onInputChange && onInputChange(value.target.value);
+        onChange?.(value);
+        onInputChange?.(value.target.value);
       }}
     />
   );
