@@ -9,7 +9,7 @@ export const EmptyState = ({ noRowsChildren, length }: { noRowsChildren?: React.
           <Database className="h-8 w-8 text-gray-400" />
         </div>
         <div className="space-y-2">
-          <h3 className="text-lg font-semibold text-gray-900">No data found</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">No data found</h3>
           <p className="max-w-sm text-gray-500">{noRowsChildren || 'There are no records to display at the moment.'}</p>
         </div>
       </div>

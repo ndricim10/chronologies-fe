@@ -3,8 +3,8 @@ import { UserResponse } from '@/@types/users';
 import { GenericModal } from '@/components/dialogs/generic-modal';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 import { useResetPasswordMutation } from '@/redux/services/authApi';
-import { toastComponent } from '@/utils/common-functions';
 import { KeyRound } from 'lucide-react';
 import { useState } from 'react';
 
@@ -15,33 +15,44 @@ interface PasswordResetModalProps extends OpenModalProps {
 
 export const PasswordResetModal = ({ openModal, setOpenModal, user, setResettingUsers }: PasswordResetModalProps) => {
   const [resetPassword, { isLoading }] = useResetPasswordMutation();
+  const { toast } = useToast();
 
   const [newPassword, setNewPassword] = useState('');
 
-  const onSubmit = async (password: string) => {
+  const onSubmit = (password: string) => {
     if (!user) return;
 
     setResettingUsers((prev) => new Set(prev).add(user.id));
-
-    try {
-      await resetPassword({
-        id: user.id,
-        newPassword: password,
-      }).unwrap();
-      toastComponent('The password has been successfully reset');
-      setOpenModal(false);
-      setNewPassword('');
-    } catch (error: any) {
-      toastComponent(error?.data?.message || 'An error occurred', 'error');
-    } finally {
-      if (user) {
-        setResettingUsers((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(user.id);
-          return newSet;
+    resetPassword({
+      id: user.id,
+      newPassword: password,
+    })
+      .unwrap()
+      .then(() => {
+        toast({
+          title: 'Success!',
+          description: 'The password has been successfully reset',
+          type: 'background',
         });
-      }
-    }
+        setOpenModal(false);
+        setNewPassword('');
+      })
+      .catch((error) => {
+        toast({
+          title: 'Failed',
+          description: error?.data?.message || 'An error occurred during upload',
+          type: 'background',
+        });
+      })
+      .finally(() => {
+        if (user) {
+          setResettingUsers((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(user.id);
+            return newSet;
+          });
+        }
+      });
   };
 
   return (

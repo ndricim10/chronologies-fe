@@ -5,8 +5,8 @@ import { CreateUser } from '@/@types/users';
 import { GenericModal } from '@/components/dialogs/generic-modal';
 import FormRender from '@/components/form-render/form-render';
 import { Form } from '@/components/ui/form';
+import { useToast } from '@/hooks/use-toast';
 import { useCreateUserMutation } from '@/redux/services/authApi';
-import { toastComponent } from '@/utils/common-functions';
 import { commonOptions } from '@/utils/common-options';
 import { initUser } from '@/utils/initial-values';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -25,6 +25,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export const UserModal = ({ openModal, setOpenModal }: OpenModalProps) => {
+  const { toast } = useToast();
   const [createUser, { isLoading }] = useCreateUserMutation();
 
   const form = useForm<FormValues>({
@@ -42,11 +43,19 @@ export const UserModal = ({ openModal, setOpenModal }: OpenModalProps) => {
     createUser(data)
       .unwrap()
       .then(() => {
-        toastComponent('The user has been successfully created');
+        toast({
+          title: 'Success!',
+          description: 'The user has been successfully created',
+          type: 'background',
+        });
         onClose();
       })
       .catch((error) => {
-        toastComponent(error?.data?.message || 'An error occurred', 'error');
+        toast({
+          title: 'Failed',
+          description: error?.data?.message || 'An error occurred during upload',
+          type: 'background',
+        });
       });
   };
 

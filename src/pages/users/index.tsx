@@ -6,14 +6,16 @@ import { GenericTable } from '@/components/tables/generic-table';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useDeleteUserMutation, useGetUsersQuery } from '@/redux/services/authApi';
-import { initialPage, toastComponent } from '@/utils/common-functions';
+import { initialPage } from '@/utils/common-functions';
 import { Plus, Users as UsersIcon } from 'lucide-react';
 import { useState } from 'react';
 import { columns } from './columns';
 import { PasswordResetModal } from './password-reset';
 import { UserModal } from './user-modal';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Users() {
+  const { toast } = useToast();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [resetModalOpen, setResetModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserResponse>();
@@ -54,11 +56,19 @@ export default function Users() {
     deleteUser(userId)
       .unwrap()
       .then(() => {
-        toastComponent('The user has been successfully deleted');
+        toast({
+          title: 'Success!',
+          description: 'The user has been successfully deleted',
+          type: 'background',
+        });
         setDeleteModal({ open: false, userId: null, userName: '' });
       })
       .catch((error) => {
-        toastComponent(error?.data?.message || 'An error occurred', 'error');
+        toast({
+          title: 'Failed',
+          description: error?.data?.message || 'An error occurred during upload',
+          type: 'background',
+        });
       })
       .finally(() => {
         setDeletingUsers((prev) => {

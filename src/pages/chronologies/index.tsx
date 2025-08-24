@@ -11,12 +11,14 @@ import {
   useLazyExportExelFileQuery,
   useUploadChronologyMutation,
 } from '@/redux/services/chronologyApi';
-import { convertDate, downloadFile, initialPage, toastComponent } from '@/utils/common-functions';
+import { convertDate, downloadFile, initialPage } from '@/utils/common-functions';
 import { Clock, FileText, Loader2, Upload } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { columns } from './columns';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Chronologies() {
+  const { toast } = useToast();
   const initModal = { open: false, fileId: undefined, fileName: '' };
   const [downloadChronology] = useLazyExportExelFileQuery();
   const [deleteChronology, { isLoading: isDeleting }] = useDeleteChronologyMutation();
@@ -47,10 +49,18 @@ export default function Chronologies() {
       .then((res) => {
         const date = new Date();
         downloadFile(res, `chronologies_${type === 'EX' ? 'EXPORT' : 'IMPORT'}_${convertDate(date, 'yyyy-MM-dd')}`);
-        toastComponent(`File ${type === 'EX' ? 'exported' : 'imported'} successfully`);
+        toast({
+          title: 'File exported',
+          description: `File ${type === 'EX' ? 'exported' : 'imported'} successfully`,
+          type: 'background',
+        });
       })
-      .catch((error) => {
-        toastComponent(error?.data?.message || 'Something went wrong!', 'error');
+      .catch(() => {
+        toast({
+          title: 'Failed',
+          description: 'Something went wrong!',
+          type: 'background',
+        });
       })
       .finally(() => {
         setDownloadingFiles((prev) => {
@@ -71,7 +81,11 @@ export default function Chronologies() {
       ];
 
       if (!allowedTypes.includes(file.type) && !file.name.match(/\.(xls|xlsx|csv)$/i)) {
-        toastComponent('Please select an Excel (.xls, .xlsx) or CSV file', 'error');
+        toast({
+          title: 'Warning',
+          description: 'Please select an Excel (.xls, .xlsx) or CSV file',
+          type: 'background',
+        });
         return;
       }
 
@@ -81,14 +95,22 @@ export default function Chronologies() {
 
   const handleUpload = async () => {
     if (!selectedFile) {
-      toastComponent('Please select a file to upload', 'error');
+      toast({
+        title: 'Warning',
+        description: 'Please select a file to upload',
+        type: 'background',
+      });
       return;
     }
 
     uploadFile(selectedFile)
       .unwrap()
       .then(() => {
-        toastComponent(`${selectedFile.name} has been processed`, 'error');
+        toast({
+          title: 'Success!',
+          description: `${selectedFile.name} has been processed`,
+          type: 'background',
+        });
 
         setSelectedFile(null);
         if (fileInputRef.current) {
@@ -96,7 +118,11 @@ export default function Chronologies() {
         }
       })
       .catch((error) => {
-        toastComponent(error?.data?.message || 'An error occurred during upload', 'error');
+        toast({
+          title: 'Failed',
+          description: error?.data?.message || 'An error occurred during upload',
+          type: 'background',
+        });
       });
   };
 
@@ -113,22 +139,30 @@ export default function Chronologies() {
 
     setDeletingFiles((prev) => new Set(prev).add(fileId));
 
-    try {
-      deleteChronology(fileId)
-        .unwrap()
-        .then(() => {
-          toastComponent('The chronology file has been removed', 'error');
-          setDeleteModal(initModal);
+    deleteChronology(fileId)
+      .unwrap()
+      .then(() => {
+        toast({
+          title: 'Failed',
+          description: 'The chronology file has been removed',
+          type: 'background',
         });
-    } catch (error: any) {
-      toastComponent(error?.data?.message || 'An error occurred during deletion', 'error');
-    } finally {
-      setDeletingFiles((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(fileId);
-        return newSet;
+        setDeleteModal(initModal);
+      })
+      .catch((error) => {
+        toast({
+          title: 'Failed',
+          description: error?.data?.message || 'An error occurred during deletion',
+          type: 'background',
+        });
+      })
+      .finally(() => {
+        setDeletingFiles((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(fileId);
+          return newSet;
+        });
       });
-    }
   };
 
   const files = filesData?.data || [];
@@ -173,7 +207,7 @@ export default function Chronologies() {
                 type="file"
                 accept=".xls,.xlsx,.csv"
                 onChange={handleFileSelect}
-                className="flex-1 cursor-pointer"
+                className="flex-1 cursor-pointer text-black dark:text-white"
               />
               <Button onClick={handleUpload} disabled={!selectedFile || isUploading}>
                 {isUploading ? (

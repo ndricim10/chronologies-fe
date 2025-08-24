@@ -7,7 +7,7 @@ export const useLogout = () => {
   const dispatch = useDispatch();
 
   const handleSignOut = () => {
-    localStorage.clear();
+    localStorage.removeItem('idToken');
     navigate('/login');
     dispatch(authApi.util.resetApiState());
   };
