@@ -15,7 +15,7 @@ import { UserModal } from './user-modal';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Users() {
-  const { toast } = useToast();
+  const { error, success } = useToast();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [resetModalOpen, setResetModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserResponse>();
@@ -56,18 +56,16 @@ export default function Users() {
     deleteUser(userId)
       .unwrap()
       .then(() => {
-        toast({
+        success({
           title: 'Success!',
           description: 'The user has been successfully deleted',
-          type: 'background',
         });
         setDeleteModal({ open: false, userId: null, userName: '' });
       })
-      .catch((error) => {
-        toast({
+      .catch((err) => {
+        error({
           title: 'Failed',
-          description: error?.data?.message || 'An error occurred during upload',
-          type: 'background',
+          description: err?.data?.message || 'An error occurred during upload',
         });
       })
       .finally(() => {

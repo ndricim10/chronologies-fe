@@ -1,18 +1,24 @@
 'use client';
 
-// Inspired by react-hot-toast library
 import * as React from 'react';
-
-import type { ToastActionElement, ToastProps } from '@/components/ui/toast';
 
 const TOAST_LIMIT = 1;
 const TOAST_REMOVE_DELAY = 1000000;
 
-type ToasterToast = ToastProps & {
+export type ToastVariant = 'default' | 'success' | 'warning' | 'destructive' | 'info';
+
+// Define our own ToastProps that includes all variants
+interface CustomToastProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  variant?: ToastVariant;
+}
+
+type ToasterToast = CustomToastProps & {
   id: string;
   title?: React.ReactNode;
   description?: React.ReactNode;
-  action?: ToastActionElement;
+  action?: React.ReactNode;
 };
 
 const actionTypes = {
@@ -164,6 +170,14 @@ function toast({ ...props }: Toast) {
   };
 }
 
+const toastVariants = {
+  success: (props: Omit<Toast, 'variant'>) => toast({ ...props, variant: 'success' }),
+  warning: (props: Omit<Toast, 'variant'>) => toast({ ...props, variant: 'warning' }),
+  error: (props: Omit<Toast, 'variant'>) => toast({ ...props, variant: 'destructive' }),
+  info: (props: Omit<Toast, 'variant'>) => toast({ ...props, variant: 'info' }),
+  default: (props: Omit<Toast, 'variant'>) => toast({ ...props, variant: 'default' }),
+};
+
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState);
 
@@ -180,6 +194,7 @@ function useToast() {
   return {
     ...state,
     toast,
+    ...toastVariants,
     dismiss: (toastId?: string) => dispatch({ type: 'DISMISS_TOAST', toastId }),
   };
 }

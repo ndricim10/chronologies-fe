@@ -18,7 +18,7 @@ import { columns } from './columns';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Chronologies() {
-  const { toast } = useToast();
+  const { success, warning, error, info } = useToast();
   const initModal = { open: false, fileId: undefined, fileName: '' };
   const [downloadChronology] = useLazyExportExelFileQuery();
   const [deleteChronology, { isLoading: isDeleting }] = useDeleteChronologyMutation();
@@ -49,17 +49,14 @@ export default function Chronologies() {
       .then((res) => {
         const date = new Date();
         downloadFile(res, `chronologies_${type === 'EX' ? 'EXPORT' : 'IMPORT'}_${convertDate(date, 'yyyy-MM-dd')}`);
-        toast({
-          title: 'File exported',
-          description: `File ${type === 'EX' ? 'exported' : 'imported'} successfully`,
-          type: 'background',
-        });
       })
-      .catch(() => {
-        toast({
+      .catch((err) => {
+        (err?.status === 462 ? info : error)({
           title: 'Failed',
-          description: 'Something went wrong!',
-          type: 'background',
+          description:
+            err?.status === 462
+              ? "Could not recover the .xls file automatically. Please open it and 'Save As' .xlsx, then re-upload."
+              : 'Something went wrong!',
         });
       })
       .finally(() => {
@@ -81,10 +78,9 @@ export default function Chronologies() {
       ];
 
       if (!allowedTypes.includes(file.type) && !file.name.match(/\.(xls|xlsx|csv)$/i)) {
-        toast({
+        warning({
           title: 'Warning',
           description: 'Please select an Excel (.xls, .xlsx) or CSV file',
-          type: 'background',
         });
         return;
       }
@@ -95,10 +91,9 @@ export default function Chronologies() {
 
   const handleUpload = async () => {
     if (!selectedFile) {
-      toast({
+      warning({
         title: 'Warning',
         description: 'Please select a file to upload',
-        type: 'background',
       });
       return;
     }
@@ -106,10 +101,9 @@ export default function Chronologies() {
     uploadFile(selectedFile)
       .unwrap()
       .then(() => {
-        toast({
+        success({
           title: 'Success!',
           description: `${selectedFile.name} has been processed`,
-          type: 'background',
         });
 
         setSelectedFile(null);
@@ -118,10 +112,9 @@ export default function Chronologies() {
         }
       })
       .catch((error) => {
-        toast({
+        error({
           title: 'Failed',
           description: error?.data?.message || 'An error occurred during upload',
-          type: 'background',
         });
       });
   };
@@ -142,18 +135,16 @@ export default function Chronologies() {
     deleteChronology(fileId)
       .unwrap()
       .then(() => {
-        toast({
-          title: 'Failed',
+        success({
+          title: 'Removed',
           description: 'The chronology file has been removed',
-          type: 'background',
         });
         setDeleteModal(initModal);
       })
       .catch((error) => {
-        toast({
+        error({
           title: 'Failed',
           description: error?.data?.message || 'An error occurred during deletion',
-          type: 'background',
         });
       })
       .finally(() => {

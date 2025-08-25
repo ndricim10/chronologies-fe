@@ -25,7 +25,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export const UserModal = ({ openModal, setOpenModal }: OpenModalProps) => {
-  const { toast } = useToast();
+  const { error, success } = useToast();
   const [createUser, { isLoading }] = useCreateUserMutation();
 
   const form = useForm<FormValues>({
@@ -43,18 +43,16 @@ export const UserModal = ({ openModal, setOpenModal }: OpenModalProps) => {
     createUser(data)
       .unwrap()
       .then(() => {
-        toast({
+        success({
           title: 'Success!',
           description: 'The user has been successfully created',
-          type: 'background',
         });
         onClose();
       })
-      .catch((error) => {
-        toast({
+      .catch((err) => {
+        error({
           title: 'Failed',
-          description: error?.data?.message || 'An error occurred during upload',
-          type: 'background',
+          description: err?.data?.message || 'An error occurred during upload',
         });
       });
   };

@@ -36,7 +36,7 @@ type PasswordValues = z.infer<typeof passwordSchema>;
 
 export default function Profile() {
   const { user } = useAuth();
-  const { toast } = useToast();
+  const { success, error } = useToast();
 
   const { data: userData } = useGetLoggedInUserQuery();
   const [updateProfile, { isLoading: isUpdatingProfile }] = useUpdateProfileMutation();
@@ -68,13 +68,13 @@ export default function Profile() {
     updateProfile(values)
       .unwrap()
       .then((res) => {
-        toast({
+        success({
           title: 'Profile Updated',
           description: res?.message,
         });
       })
       .catch(() => {
-        toast({
+        error({
           title: 'Update Failed',
           description: 'There was an error updating your profile. Please try again.',
         });
@@ -85,16 +85,16 @@ export default function Profile() {
     updatePassword(values)
       .unwrap()
       .then((res) => {
-        toast({
+        success({
           title: 'Password Changed',
           description: res?.message,
         });
         passwordForm.reset();
       })
-      .catch((error) => {
-        toast({
+      .catch((err) => {
+        error({
           title: 'Password Change Failed',
-          description: error?.data?.message || 'An error occurred while changing your password. Please try again.',
+          description: err?.data?.message || 'An error occurred while changing your password. Please try again.',
         });
       });
   };

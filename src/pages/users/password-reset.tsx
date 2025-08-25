@@ -15,7 +15,7 @@ interface PasswordResetModalProps extends OpenModalProps {
 
 export const PasswordResetModal = ({ openModal, setOpenModal, user, setResettingUsers }: PasswordResetModalProps) => {
   const [resetPassword, { isLoading }] = useResetPasswordMutation();
-  const { toast } = useToast();
+  const { error, success } = useToast();
 
   const [newPassword, setNewPassword] = useState('');
 
@@ -29,19 +29,17 @@ export const PasswordResetModal = ({ openModal, setOpenModal, user, setResetting
     })
       .unwrap()
       .then(() => {
-        toast({
+        success({
           title: 'Success!',
           description: 'The password has been successfully reset',
-          type: 'background',
         });
         setOpenModal(false);
         setNewPassword('');
       })
-      .catch((error) => {
-        toast({
+      .catch((err) => {
+        error({
           title: 'Failed',
-          description: error?.data?.message || 'An error occurred during upload',
-          type: 'background',
+          description: err?.data?.message || 'An error occurred during upload',
         });
       })
       .finally(() => {

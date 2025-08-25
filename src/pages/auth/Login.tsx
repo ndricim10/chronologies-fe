@@ -19,7 +19,7 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export default function Login() {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { success, error } = useToast();
   const [login, { isLoading }] = useLoginMutation();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -40,14 +40,13 @@ export default function Login() {
       .unwrap()
       .then((res) => {
         localStorage.setItem('idToken', res?.token);
-        toast({ title: 'Welcome back!', description: 'You have been successfully signed in.' });
+        success({ title: 'Welcome back!', description: 'You have been successfully signed in.' });
         navigate('/chronologies');
       })
-      .catch((error) => {
-        toast({
+      .catch((err) => {
+        error({
           title: 'Authentication Failed',
-          description: error?.data?.message || 'Invalid username or password',
-          variant: 'destructive',
+          description: err?.data?.message || 'Invalid username or password',
         });
       });
   };
